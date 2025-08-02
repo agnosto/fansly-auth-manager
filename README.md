@@ -25,7 +25,7 @@ Since Chrome and other Chromium browsers have restrictions on installing extensi
 3. Load the Extension in Your Browser:
   - Open your browser and navigate to chrome://extensions or brave://extensions.
   - Enable Developer mode using the toggle switch in the top-right corner.
-  - Click on the Load unpacked button.[2][3]
+  - Click on the Load unpacked button.
   - Select the folder where you extracted the extension files.
 
 The extension should now be installed and ready to use.
