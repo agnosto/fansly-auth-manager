@@ -3,58 +3,65 @@ name: Release Extension
 on:
   push:
     tags:
-      - 'v*'
+      - 'v*' # Trigger on tags like v1.0, v1.1.0, etc.
 
 jobs:
   build-and-release:
     runs-on: ubuntu-latest
+    # This is the crucial part that fixes the error
+    permissions:
+      contents: write
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Get version from tag
       id: get_version
-      run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+      run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
 
-    - name: Package for Chromium (.zip)
+    - name: Create package name variables
+      id: package_names
+      run: |
+        echo "ZIP_NAME=fansly-auth-manager-${{ env.VERSION }}.zip" >> $GITHUB_ENV
+        echo "XPI_NAME=fansly-auth-manager-${{ env.VERSION }}.xpi" >> $GITHUB_ENV
+
+    - name: Package extension files
       run: |
         mkdir -p release
-        zip -r release/fansly-auth-manager-${{ steps.get_version.outputs.VERSION }}.zip icon.png icon128.png manifest.json popup.html popup.js
+        zip -r "release/${{ env.ZIP_NAME }}" icon.png icon128.png manifest.json popup.html popup.js
 
-    - name: Package for Firefox (.xpi)
-      run: |
-        cd release
-        zip -r fansly-auth-manager-${{ steps.get_version.outputs.VERSION }}.xpi ../icon.png ../icon128.png ../manifest.json ../popup.html ../popup.js
-        cd ..
+    - name: Copy .zip to .xpi for Firefox
+      run: cp "release/${{ env.ZIP_NAME }}" "release/${{ env.XPI_NAME }}"
 
-    - name: Create Release
+    - name: Create GitHub Release
       id: create_release
       uses: actions/create-release@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         tag_name: ${{ github.ref }}
-        release_name: Release ${{ github.ref }}
+        release_name: Release ${{ env.VERSION }}
+        body: "Release for version ${{ env.VERSION }}"
         draft: false
         prerelease: false
 
-    - name: Upload Chromium Artifact
+    - name: Upload Chromium .zip artifact
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./release/fansly-auth-manager-${{ steps.get_version.outputs.VERSION }}.zip
-        asset_name: fansly-auth-manager-${{ steps.get_version.outputs.VERSION }}.zip
+        asset_path: ./release/${{ env.ZIP_NAME }}
+        asset_name: ${{ env.ZIP_NAME }}
         asset_content_type: application/zip
 
-    - name: Upload Firefox Artifact
+    - name: Upload Firefox .xpi artifact
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./release/fansly-auth-manager-${{ steps.get_version.outputs.VERSION }}.xpi
-        asset_name: fansly-auth-manager-${{ steps.get_version.outputs.VERSION }}.xpi
+        asset_path: ./release/${{ env.XPI_NAME }}
+        asset_name: ${{ env.XPI_NAME }}
         asset_content_type: application/x-xpinstall
