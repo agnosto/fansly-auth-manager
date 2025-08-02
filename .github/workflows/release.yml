@@ -1,0 +1,60 @@
+name: Release Extension
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Get version from tag
+      id: get_version
+      run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+
+    - name: Package for Chromium (.zip)
+      run: |
+        mkdir -p release
+        zip -r release/fansly-auth-manager-${{ steps.get_version.outputs.VERSION }}.zip icon.png icon128.png manifest.json popup.html popup.js
+
+    - name: Package for Firefox (.xpi)
+      run: |
+        cd release
+        zip -r fansly-auth-manager-${{ steps.get_version.outputs.VERSION }}.xpi ../icon.png ../icon128.png ../manifest.json ../popup.html ../popup.js
+        cd ..
+
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        draft: false
+        prerelease: false
+
+    - name: Upload Chromium Artifact
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./release/fansly-auth-manager-${{ steps.get_version.outputs.VERSION }}.zip
+        asset_name: fansly-auth-manager-${{ steps.get_version.outputs.VERSION }}.zip
+        asset_content_type: application/zip
+
+    - name: Upload Firefox Artifact
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./release/fansly-auth-manager-${{ steps.get_version.outputs.VERSION }}.xpi
+        asset_name: fansly-auth-manager-${{ steps.get_version.outputs.VERSION }}.xpi
+        asset_content_type: application/x-xpinstall
