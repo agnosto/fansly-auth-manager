@@ -19,7 +19,7 @@ Since Chrome and other Chromium browsers have restrictions on installing extensi
 
 1. Download the Extension:
   - Go to the Releases page.
-  - Download the .zip file from the latest release.
+  - Download the .zip file from the latest [release](https://github.com/agnosto/fansly-auth-manager/releases/latest).
 2. Extract the Files:
   - Unzip the downloaded file into a folder you can easily locate.
 3. Load the Extension in Your Browser:
@@ -43,7 +43,7 @@ This is the most straightforward method for installing unsigned extensions on Fi
   - In the search bar, type xpinstall.signatures.required.
   - Double-click on the entry to set its value to false.
 3. Install the Extension:
-  - Go to the Releases page.
+  - Go to the [Releases](https://github.com/agnosto/fansly-auth-manager/releases/latest) page.
   - Download the .xpi file from the latest release.
   - Open Firefox and go to about:addons.
   - Drag and drop the downloaded .xpi file into the Add-ons Manager window.
